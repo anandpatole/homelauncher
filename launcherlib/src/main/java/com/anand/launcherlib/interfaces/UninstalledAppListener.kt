@@ -1,5 +1,5 @@
 package com.anand.launcherlib.interfaces
 
 interface UninstalledAppListener {
-    fun uninstallAppListener()
+    fun uninstallAppListener(appname:String)
 }

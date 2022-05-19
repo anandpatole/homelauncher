@@ -1,6 +1,8 @@
 package com.anand.phonelauncher
 
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -60,8 +62,8 @@ class MainActivity : AppCompatActivity() ,AppAdapter.RecyclerClickInterface, New
 //            isNestedScrollingEnabled=false
 //        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) registerReceiver(
-            ApplicatonList(),
-            ApplicatonList.intentFilter
+                ApplicatonList(),
+                ApplicatonList.intentFilter
         )
         searchView=findViewById(R.id.searchView)
         recycler=findViewById(R.id.app_recycler)
@@ -69,9 +71,9 @@ class MainActivity : AppCompatActivity() ,AppAdapter.RecyclerClickInterface, New
         recycler.isNestedScrollingEnabled=false
         var list=  ApplicatonList.getApplicationsInfo(applicationContext)
         appAdpater= AppAdapter(
-            context = this,
-            arrayList = list as ArrayList<ApplicationInfo>?,
-            listerns = this
+                context = this,
+                arrayList = list as ArrayList<ApplicationInfo>?,
+                listerns = this
         )
         recycler.adapter=appAdpater
         ApplicatonList.registerListners(this, this)
@@ -99,25 +101,39 @@ class MainActivity : AppCompatActivity() ,AppAdapter.RecyclerClickInterface, New
         startActivity(intent)
     }
 
-    override fun newAppListener() {
-        Toast.makeText(this, "App installed", Toast.LENGTH_LONG).show()
+    override fun newAppListener(packageName:String) {
+      var appname = getAppName(this,packageName)
+        Toast.makeText(this, "${appname} App installed", Toast.LENGTH_LONG).show()
         var list=  ApplicatonList.getApplicationsInfo(applicationContext)
         appAdpater= AppAdapter(
-            context = this,
-            arrayList = list as ArrayList<ApplicationInfo>?,
-            listerns = this
+                context = this,
+                arrayList = list as ArrayList<ApplicationInfo>?,
+                listerns = this
         )
         recycler.adapter=appAdpater
     }
 
-    override fun uninstallAppListener() {
-        Toast.makeText(this, "App Uinstalled", Toast.LENGTH_LONG).show()
+    override fun uninstallAppListener(packageName: String) {
+        var appname = getAppName(this,packageName)
+        Toast.makeText(this, "${appname} App Uinstalled", Toast.LENGTH_LONG).show()
         var list=  ApplicatonList.getApplicationsInfo(applicationContext)
         appAdpater= AppAdapter(
-            context = this,
-            arrayList = list as ArrayList<ApplicationInfo>?,
-            listerns = this
+                context = this,
+                arrayList = list as ArrayList<ApplicationInfo>?,
+                listerns = this
         )
         recycler.adapter=appAdpater
+    }
+
+    private fun getAppName(context: Context?, packageName: String): String {
+        val packageManager: PackageManager? =context?.packageManager
+        val applicationInfo: android.content.pm.ApplicationInfo? =
+                try
+                {
+                    packageManager?.getApplicationInfo(packageName, 0)
+                } catch (exception: PackageManager.NameNotFoundException) {
+                    null
+                }
+        return (if (applicationInfo != null) packageManager?.getApplicationLabel(applicationInfo) else packageName) as String
     }
 }

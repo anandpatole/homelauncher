@@ -26,7 +26,7 @@ class ApplicatonList : BroadcastReceiver()
 
         var intentFilter = IntentFilter()
         var newAppListener: WeakReference<NewAppListener>? = null
-         var uninstalledAppListener: WeakReference<UninstalledAppListener>? = null
+        var uninstalledAppListener: WeakReference<UninstalledAppListener>? = null
         fun getApplicationsInfo(context: Context): List<ApplicationInfo>? {
             val apps: MutableList<ApplicationInfo> = ArrayList()
             val intent = Intent(Intent.ACTION_MAIN, null)
@@ -39,6 +39,10 @@ class ApplicatonList : BroadcastReceiver()
                 info.packageName = ri.activityInfo.packageName
                 info.name = ri.activityInfo.name
                 info.label = ri.loadLabel(pm) as String
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    info.versionCode= pm.getPackageInfo(ri.activityInfo.packageName,0).longVersionCode.toInt()
+                }
+                info.versionName=pm.getPackageInfo(ri.activityInfo.packageName,0).versionName
                 info.icon = ri.activityInfo.loadIcon(pm)
                 apps.add(info)
             }
@@ -47,8 +51,8 @@ class ApplicatonList : BroadcastReceiver()
         }
 
         fun registerListners(
-            newAppListener: NewAppListener,
-            uninstalledAppListener: UninstalledAppListener
+                newAppListener: NewAppListener,
+                uninstalledAppListener: UninstalledAppListener
         )
         {
             ApplicatonList.newAppListener=WeakReference(newAppListener)
@@ -63,17 +67,18 @@ class ApplicatonList : BroadcastReceiver()
     override fun onReceive(context: Context?, intent: Intent?) {
         var action = intent?.getAction()
         Log.e("action",action.toString())
+        val packageName = intent?.data?.encodedSchemeSpecificPart
         if (action!=null && context!=null) {
             if (action.equals(Intent.ACTION_PACKAGE_ADDED)) {
 
-                newAppListener?.get()?.newAppListener()
+                newAppListener?.get()?.newAppListener(packageName?:"")
             }
             else if(action.equals(Intent.ACTION_PACKAGE_REMOVED)) {
-                uninstalledAppListener?.get()?.uninstallAppListener()
+                uninstalledAppListener?.get()?.uninstallAppListener(packageName?:"")
             }
             else if(action.equals(Intent.ACTION_PACKAGE_FULLY_REMOVED))
             {
-                uninstalledAppListener?.get()?.uninstallAppListener()
+                uninstalledAppListener?.get()?.uninstallAppListener(packageName?:"")
             }
         }
     }
